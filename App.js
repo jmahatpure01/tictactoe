@@ -1,13 +1,5 @@
 import React, {Component} from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-  Button
-} from 'react-native';
+import {StyleSheet, View, Text, Button} from 'react-native';
 
 class Move {
   row;
@@ -15,64 +7,63 @@ class Move {
 }
 
 class App extends Component {
-  constructor(props){
+  constructor(props) {
     super(props);
-    this.state={
-      board: [["", "", ""], ["", "", ""], ["", "", ""]],
+    this.state = {
+      board: [['', '', ''], ['', '', ''], ['', '', '']],
       player: 'X',
       ai: 'O',
-      msg: "Good Luck Player"
-    }
+      msg: 'Good Luck Player',
+    };
   }
 
   isMovesLeft() {
-    for (let i = 0; i<3; i++) { 
-      for (let j = 0; j<3; j++) {
-        if (this.state.board[i][j]=="") {
-          return true; 
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        if (this.state.board[i][j] === '') {
+          return true;
         }
       }
     }
     return false;
   }
 
-  evaluate(board=null) {
-    if(board == null) {
+  evaluate(board = null) {
+    if (board === null) {
       board = this.state.board;
     }
-    
-    for(let row=0; row < 3; row++) {
-      if(board[row][0] == board[row][1] && board[row][1] == board[row][2]) {
-        if(board[row][0] == this.state.ai) {
+    for (let row = 0; row < 3; row++) {
+      if (board[row][0] === board[row][1] && board[row][1] === board[row][2]) {
+        if (board[row][0] === this.state.ai) {
           return +10;
-        } else if(board[row][0] == this.state.player) {
+        } else if (board[row][0] === this.state.player) {
           return -10;
         }
       }
     }
 
-    for(let col=0; col < 3; col++) {
-      if(board[0][col] == board[1][col] && board[1][col] == board[2][col]) {
-        if(board[0][col] == this.state.ai) {
+    for (let col = 0; col < 3; col++) {
+      if (board[0][col] === board[1][col] && board[1][col] === board[2][col]) {
+        if (board[0][col] === this.state.ai) {
           return +10;
-        } else if(board[0][col] == this.state.player) {
+        } else if (board[0][col] === this.state.player) {
           return -10;
         }
       }
     }
 
-    if(board[0][0] == board[1][1] && board[1][1] == board[2][2]) {
-      if(board[0][0] == this.state.ai) {
+    if (board[0][0] === board[1][1] && board[1][1] === board[2][2]) {
+      if (board[0][0] === this.state.ai) {
         return +10;
-      } else if(board[0][0] == this.state.player) {
+      } else if (board[0][0] === this.state.player) {
         return -10;
       }
     }
 
-    if(board[2][0] == board[1][1] && board[1][1] == board[0][2]) {
-      if(board[0][2] == this.state.ai) {
+    if (board[2][0] === board[1][1] && board[1][1] === board[0][2]) {
+      if (board[0][2] === this.state.ai) {
         return +10;
-      } else if(board[0][2] == this.state.player) {
+      } else if (board[0][2] === this.state.player) {
         return -10;
       }
     }
@@ -80,32 +71,39 @@ class App extends Component {
     return 0;
   }
 
-  minimax(board=null, depth, isMax) {
-    if(board == null){
+  minimax(board = null, depth = 0, isMax = false, alpha = -1000, beta = 1000) {
+    if (board === null) {
       board = this.state.board;
     }
-    
     let score = this.evaluate(board);
 
-    if(score == -10 || score == 10) {
+    if (score === -10 || score === 10) {
       return score;
     }
 
-    if(this.isMovesLeft() == false) {
+    if (this.isMovesLeft() === false) {
       return 0;
     }
 
-    if(isMax) {
+    if (isMax) {
       let best = -1000;
 
-      for(let row = 0; row < 3; row++) {
-        for(let col = 0; col < 3; col++) {
-          if(board[row][col] == "") {
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+          if (board[row][col] === '') {
             board[row][col] = this.state.ai;
 
-            best = Math.max(best, this.minimax(board, depth+1, !isMax));
+            best = Math.max(
+              best,
+              this.minimax(board, depth + 1, !isMax, alpha, beta),
+            );
 
-            board[row][col] = "";
+            board[row][col] = '';
+
+            alpha = Math.max(alpha, best);
+            if (beta <= alpha) {
+              break;
+            }
           }
         }
       }
@@ -113,14 +111,22 @@ class App extends Component {
     } else {
       let best = 1000;
 
-      for(let row = 0; row < 3; row++) {
-        for(let col = 0; col < 3; col++) {
-          if(board[row][col] == "") {
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+          if (board[row][col] === '') {
             board[row][col] = this.state.player;
 
-            best = Math.max(best, this.minimax(board, depth+1, !isMax));
+            best = Math.min(
+              best,
+              this.minimax(board, depth + 1, !isMax, alpha, beta),
+            );
 
-            board[row][col] = "";
+            board[row][col] = '';
+
+            beta = Math.min(beta, best);
+            if (beta <= alpha) {
+              break;
+            }
           }
         }
       }
@@ -128,23 +134,23 @@ class App extends Component {
     }
   }
 
-  findTheBestMove() {
+  findTheBestMove(board) {
     let bestVal = -1000;
     let bestMove = new Move();
     bestMove.row = -1;
     bestMove.col = -1;
-    let board = this.state.board;
+    //let board = this.state.board;
 
-    for(let row = 0; row < 3; row++) {
-      for(let col = 0; col < 3; col++) {
-        if(board[row][col] == "") {
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        if (board[row][col] === '') {
           board[row][col] = this.state.ai;
 
           let moveVal = this.minimax(board, 0, false);
 
-          board[row][col] = "";
+          board[row][col] = '';
 
-          if(moveVal > bestVal) {
+          if (moveVal > bestVal) {
             bestMove.row = row;
             bestMove.col = col;
             bestVal = moveVal;
@@ -156,78 +162,118 @@ class App extends Component {
     return bestMove;
   }
 
-  input(btn){
-    console.log(btn)
+  input(btn) {
+    console.log(btn);
     let board = this.state.board;
-    switch(btn) {
-      case 1 : board[0][0] = this.state.player;
-      this.setState({board: board});break;
-      case 2 : board[0][1] = this.state.player;
-      this.setState({board: board});break;
-      case 3 : board[0][2] = this.state.player;
-      this.setState({board: board});break;
-      case 4 : board[1][0] = this.state.player;
-      this.setState({board: board});break;
-      case 5 : board[1][1] = this.state.player;
-      this.setState({board: board});break;
-      case 6 : board[1][2] = this.state.player;
-      this.setState({board: board});break;
-      case 7 : board[2][0] = this.state.player;
-      this.setState({board: board});break;
-      case 8 : board[2][1] = this.state.player;
-      this.setState({board: board});break;
-      case 9 : board[2][2] = this.state.player;
-      this.setState({board: board});break;
+    switch (btn) {
+      case 1:
+        board[0][0] = this.state.player;
+        this.setState({board: board});
+        break;
+      case 2:
+        board[0][1] = this.state.player;
+        this.setState({board: board});
+        break;
+      case 3:
+        board[0][2] = this.state.player;
+        this.setState({board: board});
+        break;
+      case 4:
+        board[1][0] = this.state.player;
+        this.setState({board: board});
+        break;
+      case 5:
+        board[1][1] = this.state.player;
+        this.setState({board: board});
+        break;
+      case 6:
+        board[1][2] = this.state.player;
+        this.setState({board: board});
+        break;
+      case 7:
+        board[2][0] = this.state.player;
+        this.setState({board: board});
+        break;
+      case 8:
+        board[2][1] = this.state.player;
+        this.setState({board: board});
+        break;
+      case 9:
+        board[2][2] = this.state.player;
+        this.setState({board: board});
+        break;
     }
-    let move = this.findTheBestMove();
-    board[move.row][move.col] = this.state.ai;
-    this.setState({board: board});
-    let result = this.evaluate();
-    if(result == 10) {
-      this.setState({msg: "AI Won"})
-    } else if(result == -10) {
-      this.setState({msg: "Great! Player Won"})
-    } else if(result == 0 && this.isMovesLeft() == false) {
-      this.setState({msg: "A RARE Tie"})
+    let move = this.findTheBestMove(board);
+    if (move.row === -1 && move.col === -1) {
+      this.setState({msg: 'A RARE Tie'});
+    } else {
+      board[move.row][move.col] = this.state.ai;
+      this.setState({board: board});
+      let result = this.evaluate(board);
+      if (result === 10) {
+        this.setState({msg: 'AI Won'});
+      } else if (result === -10) {
+        this.setState({msg: 'Great! Player Won'});
+      } else if (result === 0 && this.isMovesLeft() === false) {
+        this.setState({msg: 'A RARE Tie'});
+      }
     }
   }
 
   reset() {
     this.setState({
-      board: [["", "", ""], ["", "", ""], ["", "", ""]],
+      board: [['', '', ''], ['', '', ''], ['', '', '']],
       player: 'X',
       ai: 'O',
-      msg: "Good Luck Player!"
-    })
+      msg: 'Good Luck Player!',
+    });
   }
 
-  render(){
+  render() {
     return (
       <View style={styles.body}>
         <Text style={styles.heading}>TicTacToe</Text>
         <Text>{this.state.msg}</Text>
         <View style={styles.outerContainer}>
           <View style={styles.row}>
-            <Text style={styles.inputBox} onPress={()=>this.input(1)}>{this.state.board[0][0]}</Text>
-            <Text style={styles.inputBox} onPress={()=>this.input(2)}>{this.state.board[0][1]}</Text>
-            <Text style={styles.inputBox} onPress={()=>this.input(3)}>{this.state.board[0][2]}</Text>
+            <Text style={styles.inputBox} onPress={() => this.input(1)}>
+              {this.state.board[0][0]}
+            </Text>
+            <Text style={styles.inputBox} onPress={() => this.input(2)}>
+              {this.state.board[0][1]}
+            </Text>
+            <Text style={styles.inputBox} onPress={() => this.input(3)}>
+              {this.state.board[0][2]}
+            </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.inputBox} onPress={()=>this.input(4)}>{this.state.board[1][0]}</Text>
-            <Text style={styles.inputBox} onPress={()=>this.input(5)}>{this.state.board[1][1]}</Text>
-            <Text style={styles.inputBox} onPress={()=>this.input(6)}>{this.state.board[1][2]}</Text>
+            <Text style={styles.inputBox} onPress={() => this.input(4)}>
+              {this.state.board[1][0]}
+            </Text>
+            <Text style={styles.inputBox} onPress={() => this.input(5)}>
+              {this.state.board[1][1]}
+            </Text>
+            <Text style={styles.inputBox} onPress={() => this.input(6)}>
+              {this.state.board[1][2]}
+            </Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.inputBox} onPress={()=>this.input(7)}>{this.state.board[2][0]}</Text>
-            <Text style={styles.inputBox} onPress={()=>this.input(8)}>{this.state.board[2][1]}</Text>
-            <Text style={styles.inputBox} onPress={()=>this.input(9)}>{this.state.board[2][2]}</Text>
+            <Text style={styles.inputBox} onPress={() => this.input(7)}>
+              {this.state.board[2][0]}
+            </Text>
+            <Text style={styles.inputBox} onPress={() => this.input(8)}>
+              {this.state.board[2][1]}
+            </Text>
+            <Text style={styles.inputBox} onPress={() => this.input(9)}>
+              {this.state.board[2][2]}
+            </Text>
           </View>
         </View>
         <View style={styles.controls}>
           <Text>Game</Text>
           <Text>Player: {this.state.player}</Text>
           <Text>AI: {this.state.ai}</Text>
-          <Button title="Reset" onPress={()=>this.reset()}/>
+          <Button title="Reset" onPress={() => this.reset()} />
         </View>
       </View>
     );
@@ -235,11 +281,11 @@ class App extends Component {
 }
 
 const styles = StyleSheet.create({
-  body:{
+  body: {
     flex: 1,
     flexDirection: 'column',
-    alignContent:'center',
-    justifyContent: 'center'
+    alignContent: 'center',
+    justifyContent: 'center',
   },
   outerContainer: {
     flex: 3,
@@ -247,11 +293,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignContent: 'flex-start',
     justifyContent: 'center',
-    height: 400
+    height: 400,
   },
   heading: {
     fontSize: 20,
-    marginBottom: 20
+    marginBottom: 20,
   },
   row: {
     flex: 2,
@@ -266,10 +312,10 @@ const styles = StyleSheet.create({
     fontSize: 100,
     marginBottom: 0,
     justifyContent: 'center',
-    textAlign: 'center'
+    textAlign: 'center',
   },
-  controls:{
-    flex: 1
+  controls: {
+    flex: 1,
   },
 });
 
